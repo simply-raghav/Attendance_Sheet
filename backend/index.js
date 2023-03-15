@@ -86,8 +86,9 @@ app.post("/login-student",
 // adding subjects to subject table
 app.post("/add-subject",
     // body(fieldname, errorMsg)
-    [body("subject_code", "Enter subject code of length 7").isLength({ min: 7, max: 7 }),
-    body("subject_name", "password min length 5").isLength({ min: 4 }),
+    [
+        body("subject_code", "Enter subject code of length 7").isLength({ min: 7, max: 7 }),
+        body("subject_name", "password min length 5").isLength({ min: 4 }),
     ],
     async (req, res) => {
 
@@ -175,7 +176,7 @@ app.get("/student",
                 res.send({ msg: "no students found" })
             }
 
-            sql = `select subject_name from subject_tb where subject_code in(select subject_code from student_subjects_tb where course='${course}' and semester=${semester})`
+            sql = `select subject_name, subject_code from subject_tb where subject_code in(select subject_code from student_subjects_tb where course='${course}' and semester=${semester})`
             connection.query(sql, (err, result) => {
                 if (err) {
                     console.log(err.sqlMessage)
@@ -201,7 +202,6 @@ app.get("/students",
         body("semester", "enter semester value").isNumeric(),
     ],
     async (req, res) => {
-
         // check for errors in input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -224,6 +224,37 @@ app.get("/students",
         })
     })
 
+
+
+
+// api for getting the attendence details of particular student in particular subject
+app.get("/attendence", 
+    [
+        body("student_id", "enter valid student_id").isNumeric(),
+        body("subject_code", "Enter subject code of length 7").isLength({ min: 7, max: 7 }),
+    ],
+    async(req, res) => {
+        // check for errors in input
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { student_id, subject_code } = req.body
+
+        let sql = `select * from attendance_tb where subject_code='${subject_code}' and student_id=${student_id}`
+        connection.query(sql, (err, result) => {
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send(err)
+                return
+            }
+
+            if (result) {
+                res.send(result)
+            }
+        })
+    })
 
 
 
