@@ -67,8 +67,7 @@ app.post("/login-student",
 
         const { email, password } = req.body
 
-        let sql = `select student_id from student_tb where email_id='${email}' and password='${password}'`
-
+        let sql = `select * from student_tb where email_id='${email}' and password='${password}'`
 
         connection.query(sql, (err, result) => {
             if (err) {
@@ -90,8 +89,8 @@ app.post("/login-student",
 
 
 
-// all the subjects taken by a teacher
-app.get("/teacher",
+// all the subjects teached by a teacher
+app.get("/teacher-subjects",
     // body(fieldname, errorMsg)
     [
         body("teacher_id", "teacher ID is number").isNumeric(),
@@ -127,7 +126,7 @@ app.get("/teacher",
 
 
 // all the subjects taken by a student
-app.get("/student",
+app.get("/student-subjects",
     // body(fieldname, errorMsg)
     [
         body("student_id", "student ID is number").isNumeric(),
@@ -259,28 +258,29 @@ app.post("/add-attendence",
         //     return res.status(400).json({ success: false, errors: errors.array() });
         // }
 
+        
         const { students } = req.body
         let sql = `insert into attendance_tb(student_id, subject_code, teacher_id, date, present) values`
 
         for (let i = 0; i < students.length; i++) {
-            const { student_id, subject_code, teacher_id, date, present } = students[i]
+            const { student_id, subject_code, teacher_idi, date, present } = students[i]
             sql += `(${student_id}, '${subject_code}', ${teacher_id}, '${date}', ${present})`
             if (i != students.length - 1) sql += ", "
         }
 
-        // connection.query(sql, (err, result) => {
-        //     if(err) {
-        //         console.log(err.sqlMessage)
-        //         res.send({success: false, err})
-        //     }
+        connection.query(sql, (err, result) => {
+            if(err) {
+                console.log(err.sqlMessage)
+                res.send({success: false, err})
+            }
 
-        //     if(result) {
-        //         console.log(result)
-        //         res.send({success: true, msg: "attendence added successfully"})
-        //     }
+            if(result) {
+                console.log(result)
+                res.send({success: true, msg: "attendence added successfully"})
+            }
 
-        // })
-        res.send(sql)
+        })
+        // res.send(sql)
     })
 
 
