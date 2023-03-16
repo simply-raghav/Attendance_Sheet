@@ -99,12 +99,13 @@ app.get("/teacher",
     async (req, res) => {
 
         // check for errors in input
-        const errors = validationResult(req);
+        const errors = validationResult(req.query);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { teacher_id } = req.body
+        
+        const { teacher_id } = req.query
 
         const sql = `select subject_name, subject_code from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_ID=${teacher_id});`
         connection.query(sql, (err, result) => {
@@ -114,8 +115,11 @@ app.get("/teacher",
                 return
             }
 
-            if (result) {
+            if (result.length>0) {
                 res.send({ success: true, result })
+                return
+            } else if(result.length==0) {
+                res.send({success:true, msg:"no subjects found"})
                 return
             }
         })
@@ -131,12 +135,12 @@ app.get("/student",
     async (req, res) => {
 
         // check for errors in input
-        const errors = validationResult(req);
+        const errors = validationResult(req.query);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { student_id } = req.body
+        const { student_id } = req.query
 
         let sql = `select course, semester from student_tb where student_id=${student_id}`
         let course, semester
@@ -183,14 +187,14 @@ app.get("/students",
     ],
     async (req, res) => {
         // check for errors in input
-        const errors = validationResult(req);
+        const errors = validationResult(req.query);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { course, semester } = req.body
+        const { course, semester } = req.query
 
-        let sql = `select * from student_tb where course='${course}' and semester=${semester}`
+        let sql = `select student_id, student_regno, student_name, email_id, course, department, semester from student_tb where course='${course}' and semester=${semester}`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
@@ -207,7 +211,6 @@ app.get("/students",
 
 
 
-
 // api for getting the attendence details of particular student in particular subject
 app.get("/attendence",
     [
@@ -216,14 +219,14 @@ app.get("/attendence",
     ],
     async (req, res) => {
         // check for errors in input
-        const errors = validationResult(req);
+        const errors = validationResult(req.query);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { student_id, subject_code } = req.body
+        const { student_id, subject_code } = req.query
 
-        let sql = `select * from attendance_tb where subject_code='${subject_code}' and student_id=${student_id}`
+        let sql = `select student_id, subject_code, teacher_id, date, present from attendance_tb where subject_code='${subject_code}' and student_id=${student_id}`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
