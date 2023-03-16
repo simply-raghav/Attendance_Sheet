@@ -31,19 +31,22 @@ app.post("/login-teacher",
 
         const { email, password } = req.body
 
-        let sql = `select teacher_id from teacher_tb where email_id='${email}' and password='${password}'`
+        let sql = `select teacher_id, email_id, teacher_name from teacher_tb where email_id='${email}' and password='${password}'`
 
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
             if (result.length > 0) {
                 res.send({ success: true, msg: "teacher login successful", result })
+                return
             }
 
             if (result) {
                 res.send({ msg: "no teacher found" })
+                return
             }
         })
     })
@@ -71,13 +74,16 @@ app.post("/login-student",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
             if (result.length > 0) {
                 res.send({ success: true, msg: "student login successful", result })
+                return
             }
 
             if (result) {
                 res.send({ msg: "no student found" })
+                return
             }
         })
     })
@@ -105,10 +111,12 @@ app.get("/teacher",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
                 res.send({ success: true, result })
+                return
             }
         })
     })
@@ -136,6 +144,7 @@ app.get("/student",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
@@ -143,6 +152,7 @@ app.get("/student",
                 semester = result[0].semester
             } else {
                 res.send({ msg: "no students found" })
+                return
             }
 
             sql = `select subject_name, subject_code from subject_tb where subject_code in(select subject_code from student_subjects_tb where course='${course}' and semester=${semester})`
@@ -150,6 +160,7 @@ app.get("/student",
                 if (err) {
                     console.log(err.sqlMessage)
                     res.send({ success: false, err })
+                    return
                 }
 
                 if (result) {
@@ -184,10 +195,12 @@ app.get("/students",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
                 res.send({ success: true, result })
+                return
             }
         })
     })
@@ -215,10 +228,12 @@ app.get("/attendence",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
                 res.send({ success: true, result })
+                return
             }
         })
     })
@@ -288,10 +303,12 @@ app.post("/add-subject",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
                 res.send({ success: true, msg: "subject added successfully" })
+                return
             }
         })
     })
@@ -319,10 +336,12 @@ app.post("/add-teacher",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
                 res.send({ success: true, result })
+                return
             }
         })
     })
@@ -366,10 +385,12 @@ app.post("/add-student",
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
+                return
             }
 
             if (result) {
                 res.send({ success: true, result })
+                return
             }
         })
     })
