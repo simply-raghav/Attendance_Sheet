@@ -86,10 +86,67 @@ router.post("/add-attendence",
                 res.send({ success: true, msg: "attendence added successfully" })
             }
 
+
         })
         // res.send(sql)
     })
 
+router.post("/update-attendance", 
+
+async (req, res) => {
+    const {students} = req.body
+    console.log( );
+    // sql = ""
+    students.forEach(student => {
+        const {student_id, subject_code, teacher_ID, date, present} = student
+        sql = `UPDATE attendance_tb SET present = ${present} WHERE student_id=${student_id} AND subject_code = "${subject_code}" AND teacher_ID=${teacher_ID} AND date = "${date}";`
+        
+        connection.query(sql, (err,result) => {
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+            }
+    
+            if (result) {
+                console.log(result)
+            }
+        })
+    });
+    
+    res.send({ success: true, msg: "attendence added successfully"})
+    
+})
+
+router.get("/attendance-record",
+    [
+        body("subject_code", "Enter valid Subject Id").isLength({min:7, max: 7}),
+        body("teacher_ID", "Enter valid teacher id").isNumeric(),
+        body("date", "Enter valid teacher id").isDate()
+        
+    ], 
+    async (req, res) => {
+        const errors = validationResult(req.query);
+        if(!errors.isEmpty()){
+            return res.status(400).json({success:false, errors: errors.array() });
+        }
+
+        const {subject_code, teacher_ID, date} = req.body
+
+        let sql = `SELECT student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_ID=${teacher_ID} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
+
+        connection.query(sql, (err, result)=>{
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+                return
+            }
+
+            if (result) {
+                res.send({ success: true, result })
+                return
+            }
+        })
+    })
 
     
 // Export the module
