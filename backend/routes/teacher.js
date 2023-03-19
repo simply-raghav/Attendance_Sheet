@@ -33,7 +33,7 @@ router.post("/login-teacher",
 
         const { email, password } = req.body
 
-        let sql = `select teacher_ID, teacher_name, email_id, password from teacher_tb where email_id='${email}'`
+        let sql = `select teacher_id, teacher_name, email_id, password from teacher_tb where email_id='${email}'`
 
         connection.query(sql, async (err, result) => {
             if (err) {
@@ -78,7 +78,7 @@ router.get("/teacher-subjects",
 
         const { teacher_id } = req.query
 
-        const sql = `select subject_name, subject_code, course, dept from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_ID=${teacher_id});`
+        const sql = `select subject_name, subject_code, course, dept from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_id=${teacher_id});`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
