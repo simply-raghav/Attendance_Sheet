@@ -92,15 +92,15 @@ router.post("/add-attendence",
         // res.send(sql)
     })
 
-router.post("/update-attendance", 
+router.put("/update-attendance", 
 
 async (req, res) => {
     const {students} = req.body
     console.log( );
     // sql = ""
     students.forEach(student => {
-        const {student_id, subject_code, teacher_ID, date, present} = student
-        sql = `UPDATE attendance_tb SET present = ${present} WHERE student_id=${student_id} AND subject_code = "${subject_code}" AND teacher_ID=${teacher_ID} AND date = "${date}";`
+        const {student_id, subject_code, teacher_id, date, present} = student
+        sql = `UPDATE attendance_tb SET present = ${present} WHERE student_id=${student_id} AND subject_code = "${subject_code}" AND teacher_id=${teacher_id} AND date = "${date}";`
         
         connection.query(sql, (err,result) => {
             if (err) {
@@ -121,7 +121,7 @@ async (req, res) => {
 router.get("/attendance-record",
     [
         body("subject_code", "Enter valid Subject Id").isLength({min:7, max: 7}),
-        body("teacher_ID", "Enter valid teacher id").isNumeric(),
+        body("teacher_id", "Enter valid teacher id").isNumeric(),
         body("date", "Enter valid teacher id").isDate()
         
     ], 
@@ -131,9 +131,9 @@ router.get("/attendance-record",
             return res.status(400).json({success:false, errors: errors.array() });
         }
 
-        const {subject_code, teacher_ID, date} = req.body
+        const {subject_code, teacher_id, date} = req.body
 
-        let sql = `SELECT student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_ID=${teacher_ID} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
+        let sql = `SELECT student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
 
         connection.query(sql, (err, result)=>{
             if (err) {
