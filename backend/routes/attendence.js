@@ -133,7 +133,7 @@ router.get("/attendance-record",
 
         const {subject_code, teacher_id, date} = req.body
 
-        let sql = `SELECT student_id, student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
+        let sql = `SELECT student_tb.student_id, student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
 
         connection.query(sql, (err, result)=>{
             if (err) {
