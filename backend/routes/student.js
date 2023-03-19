@@ -23,10 +23,11 @@ const AUTH_KEY = "MYNameISRahul@6820";
 // api for login of student
 router.post("/login-student",
     // body(fieldname, errorMsg)
-    [body("email", "Enter valid email").isEmail(),
-    body("password", "password min length 5").isLength({ min: 5 })],
+    [
+        body("email", "Enter valid email").isEmail(),
+        body("password", "password min length 5").isLength({ min: 5 })
+    ],
     async (req, res) => {
-
         // check for errors in input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -35,20 +36,35 @@ router.post("/login-student",
 
         const { email, password } = req.body
 
-        let sql = `select * from student_tb where email_id='${email}' and password='${password}'`
+        let sql = `select * from student_tb where email_id='${email}'`
 
-        connection.query(sql, (err, result) => {
+        connection.query(sql, async (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
                 return
             }
             if (result.length > 0) {
-                res.send({ success: true, msg: "student login successful", result })
-                return
-            }
+                const passwordMatch = await bcrypt.compare(password, result[0].password);
+                if (!passwordMatch) {
+                    return res.status(400).json({ success: false, error: "Please Login using correct Credentials" });
+                }
 
-            if (result) {
+                // If Login Successful Generate new Token
+                // Retrieving the unique id from database which is generated automatically by mongoDB
+                const data = {
+                    student: {
+                        student_id: result.student_id,
+                    }
+                }
+
+                // After successful login authToken is generated and sended to user
+                const authToken = jwt.sign(data, AUTH_KEY);
+                // console.log(authToken);
+
+                res.send({ success: true, msg: "student login successful", result, authToken })
+                return
+            } else {
                 res.send({ msg: "no student found" })
                 return
             }

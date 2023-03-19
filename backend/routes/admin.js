@@ -48,8 +48,6 @@ router.post("/add-subject",
         })
     })
 
-
-
 // adding teacher
 router.post("/add-teacher",
     [
@@ -66,7 +64,11 @@ router.post("/add-teacher",
 
         const { teacher_name, email, password } = req.body
 
-        const sql = `insert into teacher_TB(teacher_name, email_id, password) values('${teacher_name}', '${email}', '${password}')`
+        // Encrypting the password
+        const salt = await bcrypt.genSalt(10);
+        const secPassword = await bcrypt.hash(req.body.password, salt);
+
+        const sql = `insert into teacher_TB(teacher_name, email_id, password) values('${teacher_name}', '${email}', '${secPassword}')`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
@@ -102,6 +104,11 @@ router.post("/add-student",
 
         const { name, email, reg_no, course, department, semester, password } = req.body
 
+        // Encrypting the password
+        const salt = await bcrypt.genSalt(10);
+        const secPassword = await bcrypt.hash(password, salt);
+        console.log(secPassword);
+
         // let sql = `select * from student_TB where email=${email}`
 
         // // check if user is already registered or not
@@ -115,7 +122,7 @@ router.post("/add-student",
         //     }
         // })
 
-        let sql = `insert into student_TB(student_name, email_id, student_regno, course, department, semester, password) values ('${name}', '${email}', '${reg_no}', '${course}', '${department}', '${semester}', '${password}')`
+        let sql = `insert into student_TB(student_name, email_id, student_regno, course, department, semester, password) values ('${name}', '${email}', '${reg_no}', '${course}', '${department}', '${semester}', '${secPassword}')`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)

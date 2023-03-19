@@ -13,6 +13,7 @@ const { body, validationResult } = require('express-validator');
 
 // JSON Web Token to generate unique Token for user
 const jwt = require('jsonwebtoken');
+const fetchuser = require('../middleware/fetchuser');
 // Signature Key
 const AUTH_KEY = "MYNameISRahul@6820";
 
@@ -148,6 +149,90 @@ router.get("/attendance-record",
         })
     })
 
-    
+// get the dates when the attendance for particular subject was taken by a particular teacher
+router.post("/attendence-date",
+    [
+        body("subject_code", "enter valid subject code").isLength({ min: 7, max: 7 }),
+        body("teacher_id", "enter valid teacher id").isNumeric(),
+    ],
+    async (req, res) => {
+        // check for errors in input
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { subject_code, teacher_id } = req.body
+
+        let sql = `select date from attendance_tb where subject_code="${subject_code}" and teacher_id=${teacher_id} group by date`
+        connection.query(sql, (err, result) => {
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+                return
+            }
+
+            if (result) {
+                let dates = []
+                for (let i = 0; i < result.length; i++) {
+                    let dateTime = new Date(result[i].date)
+                    let month = dateTime.getMonth() + 1
+                    if(month<=9) {
+                        month = "0"+month
+                    }
+                    let date = dateTime.getFullYear() + "-" + month + "-" + dateTime.getDate()
+                    dates[i] = date
+                }
+
+                res.send({ success: true, dates })
+            }
+        })
+    })
+
+
+// get the present and absent details of all the students of particular subject at given date
+router.post("/attendence-details",
+    [
+        body("subject_code", "enter valid subject code").isLength({ min: 7, max: 7 }),
+        body("teacher_id", "enter valid teacher id").isNumeric(),
+        body("date", "Enter valid date").isLength({min:8, max:10})
+    ],
+    (req, res) => {
+        // check for errors in input
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { subject_code, teacher_id, date } = req.body
+        const resp = {}
+
+        let sql = `select count(*) as total from attendance_tb where subject_code="${subject_code}" and teacher_id=${teacher_id} and date="${date}"`
+
+        connection.query(sql, (err, result) => {
+            if(err) {
+                res.send({success: false, msg:err.sqlMessage})
+            }
+
+            if(result) {
+                resp.total = result[0].total
+                sql = `select count(*) as present from attendance_tb where subject_code="${subject_code}" and teacher_id=${teacher_id} and date="${date}" and present=1`
+
+                connection.query(sql, (err, result) => {
+                    if(err) {
+                        res.send({ success: false, msg: err.sqlMessage })
+                    }
+
+                    if(result) {
+                        resp.present = result[0].present
+
+                        res.send({success: true, resp})
+                    }
+                })
+            }
+        })
+    })
+
+
 // Export the module
 module.exports = router;

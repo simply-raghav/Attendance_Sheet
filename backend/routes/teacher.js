@@ -33,20 +33,26 @@ router.post("/login-teacher",
 
         const { email, password } = req.body
 
-        let sql = `select teacher_id, email_id, teacher_name from teacher_tb where email_id='${email}' and password='${password}'`
+        let sql = `select teacher_ID, teacher_name, email_id, password from teacher_tb where email_id='${email}'`
 
-        connection.query(sql, (err, result) => {
+        connection.query(sql, async (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
                 res.send({ success: false, err })
                 return
             }
+            
             if (result.length > 0) {
+                const passwordMatch = await bcrypt.compare(password, result[0].password);
+                if (!passwordMatch) {
+                    return res.status(400).json({ success: false, error: "Please Login using correct Credentials" });
+                }
+
+                // delete result[0]["password"]
+                delete result[0].password
                 res.send({ success: true, msg: "teacher login successful", result })
                 return
-            }
-
-            if (result) {
+            } else {
                 res.send({ msg: "no teacher found" })
                 return
             }
@@ -72,7 +78,7 @@ router.get("/teacher-subjects",
 
         const { teacher_id } = req.query
 
-        const sql = `select subject_name, subject_code from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_ID=${teacher_id});`
+        const sql = `select subject_name, subject_code, course, dept from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_ID=${teacher_id});`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
