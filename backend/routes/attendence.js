@@ -118,12 +118,11 @@ async (req, res) => {
     
 })
 
-router.get("/attendance-record",
+router.post("/attendance-record",
     [
         body("subject_code", "Enter valid Subject Id").isLength({min:7, max: 7}),
         body("teacher_id", "Enter valid teacher id").isNumeric(),
         body("date", "Enter valid teacher id").isDate()
-        
     ], 
     async (req, res) => {
         const errors = validationResult(req.query);
