@@ -87,9 +87,65 @@ router.post("/add-attendence", fetchuser,
                 res.send({ success: true, msg: "attendence added successfully" })
             }
 
+
         })
     })
 
+router.put("/update-attendance", 
+
+async (req, res) => {
+    const {subject_code, teacher_id, date, students} = req.body
+    console.log( );
+    // sql = ""
+    students.forEach(student => {
+        const {student_id, present} = student
+        sql = `UPDATE attendance_tb SET present = ${present} WHERE student_id=${student_id} AND subject_code = "${subject_code}" AND teacher_id=${teacher_id} AND date = "${date}";`
+        
+        connection.query(sql, (err,result) => {
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+            }
+    
+            if (result) {
+                console.log(result)
+            }
+        })
+    });
+    
+    res.send({ success: true, msg: "attendence added successfully"})
+    
+})
+
+router.post("/attendance-record",
+    [
+        body("subject_code", "Enter valid Subject Id").isLength({min:7, max: 7}),
+        body("teacher_id", "Enter valid teacher id").isNumeric(),
+        body("date", "Enter valid teacher id").isDate()
+    ], 
+    async (req, res) => {
+        const errors = validationResult(req.query);
+        if(!errors.isEmpty()){
+            return res.status(400).json({success:false, errors: errors.array() });
+        }
+
+        const {subject_code, teacher_id, date} = req.body
+
+        let sql = `SELECT student_tb.student_id, student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
+
+        connection.query(sql, (err, result)=>{
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+                return
+            }
+
+            if (result) {
+                res.send({ success: true, result })
+                return
+            }
+        })
+    })
 
 // get the dates when the attendance for particular subject was taken by a particular teacher
 router.post("/attendence-date", fetchuser,
