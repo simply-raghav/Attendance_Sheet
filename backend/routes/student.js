@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-
 // database connection
 const config = require('../conn')
 const connection = config.connection
@@ -15,6 +14,7 @@ const { body, validationResult } = require('express-validator');
 
 // JSON Web Token to generate unique Token for user
 const jwt = require('jsonwebtoken');
+const fetchuser = require('../middleware/fetchuser');
 // Signature Key
 const AUTH_KEY = "MYNameISRahul@6820";
 
@@ -53,8 +53,8 @@ router.post("/login-student",
                 // If Login Successful Generate new Token
                 // Retrieving the unique id from database which is generated automatically by mongoDB
                 const data = {
-                    student: {
-                        student_id: result.student_id,
+                    user: {
+                        student_id: result[0].student_id,
                     }
                 }
 
@@ -62,6 +62,7 @@ router.post("/login-student",
                 const authToken = jwt.sign(data, AUTH_KEY);
                 // console.log(authToken);
 
+                delete result[0].password
                 res.send({ success: true, msg: "student login successful", result, authToken })
                 return
             } else {
@@ -74,20 +75,20 @@ router.post("/login-student",
 
 
 // all the subjects taken by a student
-router.get("/student-subjects",
+router.get("/student-subjects", fetchuser,
     // body(fieldname, errorMsg)
     [
-        body("student_id", "student ID is number").isNumeric(),
+        body("student_id", "student id is number").isNumeric(),
     ],
     async (req, res) => {
 
         // check for errors in input
-        const errors = validationResult(req.query);
+        const errors = validationResult(req.user);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { student_id } = req.query
+        const { student_id } = req.user
 
         let sql = `select course, semester from student_tb where student_id=${student_id}`
         let course, semester
@@ -134,7 +135,7 @@ router.get("/students",
     ],
     async (req, res) => {
         // check for errors in input
-        const errors = validationResult(req.query);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }

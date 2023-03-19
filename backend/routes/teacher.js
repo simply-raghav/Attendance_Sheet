@@ -13,6 +13,7 @@ const { body, validationResult } = require('express-validator');
 
 // JSON Web Token to generate unique Token for user
 const jwt = require('jsonwebtoken');
+const fetchuser = require('../middleware/fetchuser');
 // Signature Key
 const AUTH_KEY = "MYNameISRahul@6820";
 
@@ -33,7 +34,7 @@ router.post("/login-teacher",
 
         const { email, password } = req.body
 
-        let sql = `select teacher_ID, teacher_name, email_id, password from teacher_tb where email_id='${email}'`
+        let sql = `select teacher_id, teacher_name, email_id, password from teacher_tb where email_id='${email}'`
 
         connection.query(sql, async (err, result) => {
             if (err) {
@@ -48,9 +49,21 @@ router.post("/login-teacher",
                     return res.status(400).json({ success: false, error: "Please Login using correct Credentials" });
                 }
 
+                // If Login Successful Generate new Token
+                // Retrieving the unique id from database which is generated automatically by mongoDB
+                const data = {
+                    user: {
+                        teacher_id: result[0].teacher_id,
+                    }
+                }
+
+                // After successful login authToken is generated and sended to user
+                const authToken = jwt.sign(data, AUTH_KEY);
+                // console.log(authToken);
+
                 // delete result[0]["password"]
                 delete result[0].password
-                res.send({ success: true, msg: "teacher login successful", result })
+                res.send({ success: true, msg: "teacher login successful", result, authToken })
                 return
             } else {
                 res.send({ msg: "no teacher found" })
@@ -62,23 +75,22 @@ router.post("/login-teacher",
 
 
 // all the subjects teached by a teacher
-router.get("/teacher-subjects",
+router.get("/teacher-subjects", fetchuser,
     // body(fieldname, errorMsg)
     [
-        body("teacher_id", "teacher ID is number").isNumeric(),
+        body("teacher_id", "teacher id is number").isNumeric(),
     ],
     async (req, res) => {
 
         // check for errors in input
-        const errors = validationResult(req.query);
+        const errors = validationResult(req.user);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
+        const { teacher_id } = req.user
 
-        const { teacher_id } = req.query
-
-        const sql = `select subject_name, subject_code, course, dept from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_ID=${teacher_id});`
+        const sql = `select subject_name, subject_code, course, dept from subject_tb where subject_code in(select subject_code from teacher_subjects_tb where teacher_id=${teacher_id});`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
