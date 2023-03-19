@@ -95,11 +95,11 @@ router.post("/add-attendence",
 router.put("/update-attendance", 
 
 async (req, res) => {
-    const {students} = req.body
+    const {subject_code, teacher_id, date, students} = req.body
     console.log( );
     // sql = ""
     students.forEach(student => {
-        const {student_id, subject_code, teacher_id, date, present} = student
+        const {student_id, present} = student
         sql = `UPDATE attendance_tb SET present = ${present} WHERE student_id=${student_id} AND subject_code = "${subject_code}" AND teacher_id=${teacher_id} AND date = "${date}";`
         
         connection.query(sql, (err,result) => {
@@ -133,7 +133,7 @@ router.get("/attendance-record",
 
         const {subject_code, teacher_id, date} = req.body
 
-        let sql = `SELECT student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
+        let sql = `SELECT student_id, student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
 
         connection.query(sql, (err, result)=>{
             if (err) {
