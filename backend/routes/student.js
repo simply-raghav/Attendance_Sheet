@@ -131,6 +131,7 @@ router.get("/students",
     [
         body("course", "enter valid course name").isLength({ min: 3 }),
         body("semester", "enter semester value").isNumeric(),
+        body("mode", "enter valid mode (min, all)").isLength({min: 3, max: 3}),
     ],
     async (req, res) => {
         // check for errors in input
@@ -139,9 +140,14 @@ router.get("/students",
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { course, semester } = req.query
+        const { course, semester, mode } = req.query
 
         let sql = `select student_id, student_regno, student_name, email_id, course, department, semester from student_tb where course='${course}' and semester=${semester} ORDER BY(student_regno)`
+
+        // minify the sql query based on requirement
+        if(mode === "min") 
+            sql = `select student_id, student_regno, student_name from student_tb where course='${course}' and semester=${semester} ORDER BY(student_regno)`
+
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
