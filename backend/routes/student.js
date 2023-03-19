@@ -141,7 +141,7 @@ router.get("/students",
 
         const { course, semester } = req.query
 
-        let sql = `select student_id, student_regno, student_name, email_id, course, department, semester from student_tb where course='${course}' and semester=${semester}`
+        let sql = `select student_id, student_regno, student_name, email_id, course, department, semester from student_tb where course='${course}' and semester=${semester} ORDER BY(student_regno)`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
