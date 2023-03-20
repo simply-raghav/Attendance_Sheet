@@ -18,10 +18,10 @@ const fetchuser = require('../middleware/fetchuser');
 const AUTH_KEY = "MYNameISRahul@6820";
 
 
-// api for getting the attendence details of all students in particular subject
+// api for getting the attendence details of student in particular subject
 // query: { subject_code }
 // header: { authToken }
-router.get("/attendence", fetchuser,
+router.get("/student-attendance-subject", fetchuser,
     [
         body("subject_code", "Enter subject code of length 7").isLength({ min: 7, max: 7 })
     ],
@@ -34,8 +34,55 @@ router.get("/attendence", fetchuser,
 
         const { subject_code } = req.query
         const { student_id } = req.user
+        const resp = {}
 
-        let sql = `select student_id, subject_code, teacher_id, date, present from attendance_tb where subject_code='${subject_code}' and student_id=${student_id}`
+        let sql = `select count(*) as total from attendance_tb where subject_code='${subject_code}' and student_id=${student_id}`
+        connection.query(sql, (err, result) => {
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+                return
+            }
+
+            if (result) {
+                resp.total = result[0].total
+                sql = `select count(present) as present from attendance_tb where subject_code='${subject_code}' and student_id=${student_id} and present=1`
+                
+                connection.query(sql, (err, result) => {
+                    if(err) {
+                        console.log(err.sqlMessage)
+                        res.send({success: false, err})
+                        return
+                    }
+
+                    if(result) {
+                        resp.present = result[0].present
+                        res.send({success: true, result: resp})
+                    }
+                })
+            }
+        })
+    })
+
+
+
+// api for getting the attendence details of student in all subject in particular month
+// query: { subject_code, month }
+// header: { authToken }
+router.get("/student-attendance-all", fetchuser,
+    [
+        body("subject_code", "Enter subject code of length 7").isLength({ min: 7, max: 7 })
+    ],
+    async (req, res) => {
+        // check for errors in input
+        const errors = validationResult(req.query);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { student_id } = req.user
+
+        let sql = `select present, date, subject_name from attendance_tb, subject_tb where student_id=${student_id} and attendance_tb.subject_code=subject_tb.subject_code order by date;`
         connection.query(sql, (err, result) => {
             if (err) {
                 console.log(err.sqlMessage)
@@ -141,7 +188,7 @@ router.put("/update-attendance", fetchuser,
 // headers: { auth-token }
 // query: { subject_code, date }
 // body: list of students
-
+// same as attendance-details
 router.post("/attendance-record", fetchuser,
     [
         body("subject_code", "Enter valid Subject Id").isLength({ min: 7, max: 7 }),
@@ -224,7 +271,6 @@ router.post("/attendance-date", fetchuser,
 // get the present and absent details of all the students of particular subject at given date
 // headers: { auth-token }
 // body: { subject_code, date }
-
 router.post("/attendance-details", fetchuser,
     [
         body("subject_code", "enter valid subject code").isLength({ min: 7, max: 7 }),
