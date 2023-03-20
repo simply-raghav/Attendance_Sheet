@@ -21,6 +21,7 @@ const AUTH_KEY = "MYNameISRahul@6820";
 
 
 // api for login of student
+// body: {email, password}
 router.post("/login-student",
     // body(fieldname, errorMsg)
     [
@@ -163,7 +164,7 @@ router.get("/student-subjects", fetchuser,
                 return
             }
 
-            sql = `select subject_name, subject_code from subject_tb where subject_code in(select subject_code from student_subjects_tb where course='${course}' and semester=${semester})`
+            sql = `select subject_name, subject_code from subject_tb where course='${course}' and semester=${semester}`
             connection.query(sql, (err, result) => {
                 if (err) {
                     console.log(err.sqlMessage)
@@ -218,6 +219,7 @@ router.get("/students",
             }
         })
     })
+
 
 
 
