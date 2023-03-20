@@ -184,7 +184,7 @@ router.get("/student-subjects", fetchuser,
 
 
 // all the students of particular course and semester
-router.get("/students",
+router.post("/students",
     // body(fieldname, errorMsg)
     [
         body("course", "enter valid course name").isLength({ min: 3 }),
@@ -198,7 +198,7 @@ router.get("/students",
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { course, semester, mode } = req.query
+        const { course, semester, mode } = req
 
         let sql = `select student_id, student_regno, student_name, email_id, course, department, semester from student_tb where course='${course}' and semester=${semester} ORDER BY(student_regno)`
 
