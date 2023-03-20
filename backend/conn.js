@@ -4,7 +4,7 @@ const config = {
     host: 'localhost',
     user: 'root',
     password: "",
-    database: 'online_attendance' // change database name
+    database: 'id20448373_attendance_new' // change database name
 }
  
 let connection = mysql.createConnection(config);
