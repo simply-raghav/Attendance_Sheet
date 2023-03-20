@@ -47,17 +47,18 @@ router.get("/student-attendance-subject", fetchuser,
             if (result) {
                 resp.total = result[0].total
                 sql = `select count(present) as present from attendance_tb where subject_code='${subject_code}' and student_id=${student_id} and present=1`
-                
+
                 connection.query(sql, (err, result) => {
-                    if(err) {
+                    if (err) {
                         console.log(err.sqlMessage)
-                        res.send({success: false, err})
+                        res.send({ success: false, err })
                         return
                     }
 
-                    if(result) {
+                    if (result) {
                         resp.present = result[0].present
-                        res.send({success: true, result: resp})
+                        resp.absent = resp.total - resp.present
+                        res.send({ success: true, result: resp })
                     }
                 })
             }
@@ -70,9 +71,6 @@ router.get("/student-attendance-subject", fetchuser,
 // query: { subject_code, month }
 // header: { authToken }
 router.get("/student-attendance-all", fetchuser,
-    [
-        body("subject_code", "Enter subject code of length 7").isLength({ min: 7, max: 7 })
-    ],
     async (req, res) => {
         // check for errors in input
         const errors = validationResult(req.query);
@@ -90,8 +88,11 @@ router.get("/student-attendance-all", fetchuser,
                 return
             }
 
-            if (result) {
+            if (result.length > 0) {
                 res.send({ success: true, result })
+                return
+            } else {
+                res.send({ success: true, msg: "no attendance records found" })
                 return
             }
         })
@@ -104,7 +105,7 @@ router.get("/student-attendance-all", fetchuser,
 
 router.post("/add-attendence", fetchuser,
     [
-        body("subject_code", "enter valid subject_code").isNumeric(),
+        body("subject_code", "enter valid subject_code").isLength({ min: 7, max: 7 }),
         body("date", "enter valid date").isDate(),
     ],
     async (req, res) => {
@@ -151,13 +152,12 @@ router.put("/update-attendance", fetchuser,
     ],
     async (req, res) => {
         // check for errors in input
-        const errors = validationResult(req.query);
+        const errors = validationResult(req.body);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
-        const { students } = req.body
+        const { students, subject_code, date } = req.body
         const { teacher_id } = req.user
-        const { subject_code, date } = req.query
 
         students.forEach(student => {
             const { student_id, present } = student
@@ -170,12 +170,12 @@ router.put("/update-attendance", fetchuser,
                     return
                 }
 
-                if (result) {
-                    console.log(result)
-                    // res.send({ success: true, result, msg: "Attendance updated successfully" })
-                } else {
-                    // res.send({ success: false, result, msg: "Attendance not updated" })
-                }
+                // if (result) {
+                //     console.log(result)
+                //     // res.send({ success: true, result, msg: "Attendance updated successfully" })
+                // } else {
+                //     // res.send({ success: false, result, msg: "Attendance not updated" })
+                // }
             })
         });
 
@@ -188,7 +188,6 @@ router.put("/update-attendance", fetchuser,
 // headers: { auth-token }
 // query: { subject_code, date }
 // body: list of students
-// same as attendance-details
 router.post("/attendance-record", fetchuser,
     [
         body("subject_code", "Enter valid Subject Id").isLength({ min: 7, max: 7 }),
@@ -196,13 +195,13 @@ router.post("/attendance-record", fetchuser,
         body("date", "Enter valid teacher id").isDate()
     ],
     async (req, res) => {
-        const errors = validationResult(req.query);
+        const errors = validationResult(req.body);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
         const { teacher_id } = req.user
-        const { subject_code, date } = req.query
+        const { subject_code, date } = req.body
 
         let sql = `SELECT student_tb.student_id, student_regno, student_name, present FROM attendance_tb JOIN student_tb where attendance_tb.teacher_id=${teacher_id} AND subject_code="${subject_code}" AND date="${date}" AND student_tb.student_id = attendance_tb.student_id ORDER BY(student_regno); `
 
@@ -213,7 +212,7 @@ router.post("/attendance-record", fetchuser,
                 return
             }
 
-            if (result.length>0) {
+            if (result.length > 0) {
                 res.send({ success: true, result, msg: "records fetched successfully" })
                 return
             } else {
@@ -227,7 +226,6 @@ router.post("/attendance-record", fetchuser,
 // get the dates when the attendance for particular subject was taken by a particular teacher
 // headers: { auth-token }
 // body: { subject_code }
-
 router.post("/attendance-date", fetchuser,
     [
         body("subject_code", "enter valid subject code").isLength({ min: 7, max: 7 })
@@ -305,7 +303,7 @@ router.post("/attendance-details", fetchuser,
 
                     if (result) {
                         resp.present = result[0].present
-
+                        resp.absent = resp.total - resp.present
                         res.send({ success: true, result: resp })
                     }
                 })
