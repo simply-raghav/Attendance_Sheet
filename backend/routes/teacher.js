@@ -74,6 +74,60 @@ router.post("/login-teacher",
 
 
 
+// api for updating the teacher password 
+// headers: {auth-token} 
+// body: {password} (new password)
+// router.post("/update-teacher-password",
+    router.post("/update-teacher-password", fetchuser,
+    // body(fieldname, errorMsg)
+    [
+        body("password", "password min length 5").isLength({ min: 5 })
+    ],
+    async (req, res) => {
+        // check for errors in input
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        // const { teacher_id, password } = req.body
+        const { password } = req.body
+        const { teacher_id } = req.user
+
+        let sql = `select count(*) from teacher_tb where teacher_id='${teacher_id}'`
+
+        connection.query(sql, async (err, result) => {
+            if (err) {
+                console.log(err.sqlMessage)
+                res.send({ success: false, err })
+                return
+            }
+            if (result.length > 0) {
+                // Encrypting the password
+                const salt = await bcrypt.genSalt(10);
+                const secPassword = await bcrypt.hash(password, salt);
+
+                let sql = `update teacher_tb set password="${secPassword}" where teacher_id=${teacher_id}`
+
+                connection.query(sql, (err, result) => {
+                    if (err) {
+                        console.log(err.sqlMessage)
+                        res.send({ success: false, err })
+                        return
+                    }
+
+                    if (result) {
+                        res.send({ success: true, msg: "password update successful", result })
+                        return
+                    }
+                })
+            } else {
+                res.send({ msg: "no teacher found" })
+                return
+            }
+        })
+    })
+
 // all the subjects teached by a teacher
 router.get("/teacher-subjects", fetchuser,
     // body(fieldname, errorMsg)
