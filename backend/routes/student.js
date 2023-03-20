@@ -132,7 +132,7 @@ router.post("/update-student-password", fetchuser,
 
 
 // all the subjects taken by a student
-router.get("/student-subjects", fetchuser,
+router.post("/student-subjects", fetchuser,
     // body(fieldname, errorMsg)
     [
         body("student_id", "student id is number").isNumeric(),
