@@ -198,7 +198,7 @@ router.post("/students",
             return res.status(400).json({ success: false, errors: errors.array() });
         }
 
-        const { course, semester, mode } = req
+        const { course, semester, mode } = req.body
 
         let sql = `select student_id, student_regno, student_name, email_id, course, department, semester from student_tb where course='${course}' and semester=${semester} ORDER BY(student_regno)`
 
